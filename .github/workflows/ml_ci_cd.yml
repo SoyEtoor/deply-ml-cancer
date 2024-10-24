@@ -6,40 +6,30 @@ on:
     branches: [ master ]
   repository_dispatch:
     types: [ml_ci_cd]
-
 jobs:
   ml_ci_cd:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
-    - name: Python version
+    - name: python version
       run: python --version
-
-    - name: Install dependencies
+    - name: pip install
       run: pip install -r requirements.txt
-
-    - name: Download dataset
-      run: wget -O data/data.csv ${{github.event.client_payload.dataseturl}}  # Cambié el nombre del archivo a data.csv
-
-    - name: Display dataset
-      run: cat data/data.csv  # Cambié el nombre del archivo a data.csv
-
-    - name: Train model
+    - name: download dataset
+      run: wget -O data/data.csv ${{github.event.client_payload.dataseturl}}  # Ajuste a 'data.csv' de tu proyecto
+    - name: cat dataset
+      run: cat data/data.csv  # Cambia el nombre según tu dataset
+    - name: train model
       run: python model/train.py
-
-    - name: Build Docker image
+    - name: docker build
       run: docker build -t ${{secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.event.client_payload.sha}} .
-
-    - name: Show Docker images
+    - name: show images
       run: docker images
-
-    - name: Docker login
+    - name: docker login
       env:
         DOCKER_USER: ${{secrets.DOCKER_USER}}
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
       run: |
-        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin  # Mejoré la forma de hacer login
-
-    - name: Push Docker image
+        echo "$DOCKER_PASSWORD" | docker login -u $DOCKER_USER --password-stdin  # Más seguro
+    - name: docker Push
       run: docker push ${{secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.event.client_payload.sha}}
