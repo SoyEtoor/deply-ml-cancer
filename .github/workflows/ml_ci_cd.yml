@@ -6,26 +6,24 @@ on:
     branches: [ master ]
   repository_dispatch:
     types: [ml_ci_cd]
+
 jobs:
   ml_ci_cd:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
 
-    - name: Check Python version
+    - name: Python version
       run: python --version
 
     - name: Install dependencies
       run: pip install -r requirements.txt
 
-    - name: Create data directory if not exists
-      run: mkdir -p data
-
     - name: Download dataset
-      run: wget -O data/data.csv ${{github.event.client_payload.dataseturl}}
+      run: wget -O data/data.csv ${{github.event.client_payload.dataseturl}}  # Cambié el nombre del archivo a data.csv
 
-    - name: Display dataset content
-      run: cat data/data.csv
+    - name: Display dataset
+      run: cat data/data.csv  # Cambié el nombre del archivo a data.csv
 
     - name: Train model
       run: python model/train.py
@@ -36,12 +34,12 @@ jobs:
     - name: Show Docker images
       run: docker images
 
-    - name: Log in to DockerHub
+    - name: Docker login
       env:
         DOCKER_USER: ${{secrets.DOCKER_USER}}
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
       run: |
-        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD 
+        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin  # Mejoré la forma de hacer login
 
     - name: Push Docker image
       run: docker push ${{secrets.DOCKER_USER}}/${{secrets.MODEL_NAME}}:${{github.event.client_payload.sha}}
